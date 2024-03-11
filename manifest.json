@@ -1,6 +1,6 @@
 {
-	"short_name": "GeoJSON Viewer",
-	"name": "Minimal GeoJSON Web Viewer",
+	"short_name": "MapML GeoJSON Viewer",
+	"name": "Minimal MapML GeoJSON Web Viewer",
 	"icons": [
 		{
 			"src": "./images/treasure-map-512.png",

@@ -1,7 +1,5 @@
 // @ts-check
 
-import { MapView } from './map-view.js';
-
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
@@ -118,7 +116,10 @@ img {
         font-size: 80%;
         color: gray;
 }
-
+mapml-viewer {
+        width: 100%;
+        height: 400px;
+}
 </style>
 
 <div class="flex-container">
@@ -126,16 +127,24 @@ img {
 <div class="col">
 <div class="row">
 <img src="./images/treasure-map-256.png">
-<h2>GeoJSON Web Viewer</h2>
+<h2>MapML GeoJSON Web Viewer</h2>
 </div>
 
 <div class="row">
 <input id="loadfile" name="loadfile" type="file" accept=".geojson"/>
 <label for="loadfile">Load GeoJSON</label>
 </div>
-
-<map-view></map-view>
-
+<mapml-viewer zoom="2" lat="0" lon="0" controls controlslist="geolocation">
+  <layer- label="OpenStreetMap" checked >
+    <map-link rel="license" href="https://www.openstreetmap.org/copyright" title="© OpenStreetMap contributors CC BY-SA"></map-link>
+    <map-extent units="OSMTILE" checked>
+      <map-input name="z" type="zoom" value="18" min="0" max="18"></map-input>
+      <map-input name="x" type="location" units="tilematrix" axis="column" min="0" max="262144"></map-input>
+      <map-input name="y" type="location" units="tilematrix" axis="row" min="0" max="262144"></map-input>
+      <map-link rel="tile" tref="https://tile.openstreetmap.org/{z}/{x}/{y}.png"></map-link>
+    </map-extent>
+  </layer->
+</mapml-viewer>
 <a class="credits" href="https://www.flaticon.com/free-icons/parchment" title="parchment icons">Parchment icons created by Freepik - Flaticon</a>
 </div>
 </div>
@@ -202,7 +211,7 @@ export class MainApp extends HTMLElement {
                 this.shadowRoot?.appendChild(template.content.cloneNode(true));
 
                 this.#inputEl = this.shadowRoot?.querySelector('#loadfile');
-                this.#mapView = this.shadowRoot?.querySelector('map-view');
+                this.#mapView = this.shadowRoot?.querySelector('mapml-viewer');
 
                 const activityLog = this.shadowRoot?.querySelector('#activity');
                 if (this.#pageState.get('log') === 'y') {
@@ -259,8 +268,12 @@ export class MainApp extends HTMLElement {
                                 console.log('file text',reader.result);
                                 try {
                                         const geoJson = JSON.parse(reader.result);
-                                        this.#mapView.plotGeoJSON(geoJson);
-                                        this.addToLog(`${file.name} is valid JSON, trying to display on map...`);
+                                        const newLayer =this.#mapView.geojson2mapml(
+                                                geoJson, {label: `${file.name}`,
+                                          projection: "OSMTILE", 
+                                          caption: `${file.name}`, 
+                                          properties: `<h3>This is ${file.name}</h3>`});
+                                        newLayer.zoomTo();
                                 } catch (err) {
                                         this.addToLog(`Error parsing file: ${file.name}`);
                                 }

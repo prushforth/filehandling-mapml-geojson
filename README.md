@@ -2,10 +2,12 @@
 title: Handling files in enterprise web solutions
 published: true
 description: Using the File Handling API to create file use shortcuts for enterprise
-tags: Enterprise, Web, Fugu
+tags: Enterprise, Web, Fugu, MapML
 cover_image: https://dev-to-uploads.s3.amazonaws.com/uploads/articles/etb4l3kbqfhzioch2hs7.jpeg
-published_at: 2024-03-04 18:20 +0100
+published_at: 2024-03-10 
 ---
+
+MapML is an extension of HTML for maps. It is a declarative-first method of creating full-featured Web maps, and forms the basis of a proposal from our Community to the broader Web community at large to extend the Web with maps.
 
 Correct file handling can be cumbersome without proper system integration and selection of which applications can handle what types of files.
 
@@ -17,6 +19,9 @@ To make things more concrete, we will look at how to create a simple [GeoJSON](h
 
 > Note: This feature is [desktop only](https://developer.mozilla.org/en-US/docs/Web/Manifest/file_handlers#browser_compatibility)
 
+## GeoJSON is a simple format for encoding location of objects in JSON for use in maps
+
+## MapML is a declarative extension of HTML to include maps and layers
 
 ## File Handling in manifest.json
 In the file manager and the desktop view of most operating systems, there is a file handling UI that directs the user to use a certain app to handle the chosen file.  Previously, this was limited to native app installations, but now, it's possible for web applications to register handlers tied to PWAs that will handle files matching certain extension patterns.
@@ -118,44 +123,36 @@ Loading GeoJSON:
 ![Edge Loading GeoJSON](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/tpblmz7s6f051lnd61k5.jpeg)
 
 
-## OpenLayers
-In order to display the GeoJSON features on a map, we will use [OpenLayers](https://openlayers.org/), which is a very powerful [open-source](https://github.com/openlayers/openlayers) mapping library that is also very simple to use.
+## MapML
+In order to display the GeoJSON features on a map, we will use [MapML](https://geo.ca/initiatives/canadian-geospatial-data-infrastructure/mapml/)
 
 In this post, we will not dive into all the details, so I will just show the snippets related to initializing the map and adding the GeoJSON data on top:
 
-```javascript
+```html
 ...
-// Init map
-this.#map = new ol.Map({
-  layers: [
-    new ol.layer.Tile({
-      source: new ol.source.OSM(),
-    }),
-    this.#vectorLayer,
-  ],
-  target: this.#mapEl,
-  view: new ol.View({
-    center: [0, 0],
-    zoom: 2,
-  }),
-});
-
+// Create the map with one layer
+<mapml-viewer zoom="2" lat="0" lon="0" controls controlslist="geolocation">
+  <layer- label="OpenStreetMap" checked >
+    <map-link rel="license" href="https://www.openstreetmap.org/copyright" title="© OpenStreetMap contributors CC BY-SA"></map-link>
+    <map-extent units="OSMTILE" checked>
+      <map-input name="z" type="zoom" value="18" min="0" max="18"></map-input>
+      <map-input name="x" type="location" units="tilematrix" axis="column" min="0" max="262144"></map-input>
+      <map-input name="y" type="location" units="tilematrix" axis="row" min="0" max="262144"></map-input>
+      <map-link rel="tile" tref="https://tile.openstreetmap.org/{z}/{x}/{y}.png"></map-link>
+    </map-extent>
+  </layer->
+</mapml-viewer>
 ...
-
-// Load GeoJSON
-plotGeoJSON(obj) {
-  const features = new ol.format.GeoJSON({
-    featureProjection: 'EPSG:3857'
-  }).readFeatures(obj);
-
-  const vectorSource = new ol.source.Vector({ features });
-
-  this.#vectorLayer.setSource(vectorSource);
-
-  setTimeout(() => {
-    this.#map.getView().fit(vectorSource.getExtent(), { duration: 1000 });
-  }, 500);
-}
+```
+```JavaScript
+// Load GeoJSON from object, render as MapML layer element
+const newLayer =this.#mapView.geojson2mapml(
+        geoJson, {label: `${file.name}`,
+  projection: "OSMTILE", 
+  caption: `${file.name}`, 
+  properties: `<h3>This is ${file.name}</h3>`});
+// focus the map on the new layer
+newLayer.zoomTo();
 ```
 
 ## Creating GeoJSON files
